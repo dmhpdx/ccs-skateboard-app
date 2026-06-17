@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CCS Skateboard Measurements</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --text-primary: #ffffff;
+            --text-secondary: #999999;
+            --text-tertiary: #666666;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --border: #333333;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .app-header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--accent);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .app-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.25rem;
+        }
+
+        .company-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-tertiary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-indicator.connected {
+            background: var(--accent);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .container {
+            padding: 1.5rem 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.2;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn.btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .btn.btn-primary:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent-dim);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            border-color: var(--border);
+            box-shadow: none;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .measurement-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .measurement-item.completed {
+            border-color: var(--accent);
+        }
+
+        .measurement-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .measurement-input-container {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .measurement-input {
+            flex: 1;
+            min-width: 0;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 1.25rem;
+            text-align: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .measurement-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .measurement-input.filled {
+            border-color: var(--accent);
+            background: var(--bg-primary);
+        }
+
+        .btn-small {
+            padding: 1rem 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-small:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: var(--bg-primary);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-placeholder {
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+
+        .camera-placeholder svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .data-table {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            font-family: 'Space Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .measurement-unit {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            margin-left: 0.25rem;
+        }
+
+        .fixed-button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--bg-primary) 70%, transparent);
+            padding: 1.5rem 1rem 1rem;
+            z-index: 100;
+        }
+
+        .fixed-button-container .btn-group {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .fixed-button-container .btn {
+            max-width: 600px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        #step3 .container-content {
+            padding-bottom: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">Measurement System</div>
+        <div class="company-name">CCS</div>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator" id="bluetoothStatus"></div>
+                <span id="bluetoothText">BLE Disconnected</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>Demo Mode</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Step 1: Connect Bluetooth -->
+        <div id="step1" class="card">
+            <div class="section-title">
+                <span class="section-number">1</span>
+                Connect Laser Measure
+            </div>
+            <button class="btn btn-primary" id="connectBluetooth">
+                📡 Connect Bosch GLM (Simulated)
+            </button>
+        </div>
+
+        <!-- Step 2: Scan Barcode -->
+        <div id="step2" class="card hidden">
+            <div class="section-title">
+                <span class="section-number">2</span>
+                Scan Skateboard Barcode
+            </div>
+            <div class="input-group">
+                <label class="input-label">Enter SKU Manually</label>
+                <input type="text" class="input-field" id="skuInput" placeholder="e.g., DECK-8.0-001">
+            </div>
+            <button class="btn btn-primary" id="submitSku">Continue with SKU</button>
+            
+            <div style="text-align: center; margin: 1.5rem 0; color: var(--text-tertiary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+                — OR SCAN BARCODE —
+            </div>
+            
+            <div class="camera-container" id="cameraContainer">
+                <video id="video" autoplay playsinline class="hidden"></video>
+                <div class="camera-placeholder">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/>
+                    </svg>
+                    <div>Camera access required</div>
+                </div>
+            </div>
+            <button class="btn" id="startCamera">
+                📷 Start Camera Scan
+            </button>
+        </div>
+
+        <!-- Step 3: Take Measurements -->
+        <div id="step3" class="card hidden">
+            <div class="section-title">
+                <span class="section-number">3</span>
+                Collect Measurements
+            </div>
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">CURRENT SKU</div>
+                <div style="font-family: 'Space Mono', monospace; font-size: 1.2rem; color: var(--accent);" id="currentSku"></div>
+            </div>
+
+            <div id="measurementsList"></div>
+            
+            <button class="btn btn-primary" id="continueToReview" style="margin-top: 1.5rem;" disabled>
+                Continue to Review →
+            </button>
+        </div>
+
+        <!-- Step 4: Review and Publish -->
+        <div id="step4" class="card hidden">
+            <div class="section-title">
+                <span class="section-number">4</span>
+                Review & Publish
+            </div>
+            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">SKU</div>
+                <div style="font-family: 'Space Mono', monospace; font-size: 1.2rem; color: var(--accent);" id="reviewSku"></div>
+            </div>
+            <div id="reviewMeasurements"></div>
+            <div class="btn-group">
+                <button class="btn" id="editMeasurements">Edit</button>
+                <button class="btn btn-primary" id="publishData">
+                    ✓ Publish to Sheet
+                </button>
+            </div>
+        </div>
+
+        <!-- Published Data View -->
+        <div id="publishedData" class="card hidden">
+            <div class="section-title">
+                <span class="section-number">📊</span>
+                Published Records
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Width</th>
+                            <th>Length</th>
+                            <th>Wheelbase</th>
+                            <th>Tail</th>
+                            <th>Nose</th>
+                            <th>F.Axle</th>
+                            <th>B.Axle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" id="measureAnother" style="margin-top: 1rem;">
+                + Measure Another Board
+            </button>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // Google Apps Script Configuration
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7Q092XFjePyb3_MSCYgv7Yz8ELgF47GnLPWyLycjiYaLwGwEw3jhcdDTXMEldJAB4/exec';
+
+        // State management
+        let state = {
+            bluetoothConnected: false,
+            currentSku: '',
+            measurements: [
+                { name: 'Width', value: null, unit: 'in' },
+                { name: 'Length', value: null, unit: 'in' },
+                { name: 'Wheelbase', value: null, unit: 'in' },
+                { name: 'Tail Length', value: null, unit: 'in' },
+                { name: 'Nose Length', value: null, unit: 'in' },
+                { name: 'Front Axle Width', value: null, unit: 'in' },
+                { name: 'Back Axle Width', value: null, unit: 'in' }
+            ],
+            currentMeasurementIndex: 0,
+            publishedRecords: []
+        };
+
+        let html5QrCode = null;
+
+        // DOM Elements
+        const elements = {
+            step1: document.getElementById('step1'),
+            step2: document.getElementById('step2'),
+            step3: document.getElementById('step3'),
+            step4: document.getElementById('step4'),
+            connectBluetooth: document.getElementById('connectBluetooth'),
+            bluetoothStatus: document.getElementById('bluetoothStatus'),
+            bluetoothText: document.getElementById('bluetoothText'),
+            startCamera: document.getElementById('startCamera'),
+            cameraContainer: document.getElementById('cameraContainer'),
+            video: document.getElementById('video'),
+            skuInput: document.getElementById('skuInput'),
+            submitSku: document.getElementById('submitSku'),
+            currentSku: document.getElementById('currentSku'),
+            measurementsList: document.getElementById('measurementsList'),
+            continueToReview: document.getElementById('continueToReview'),
+            reviewSku: document.getElementById('reviewSku'),
+            reviewMeasurements: document.getElementById('reviewMeasurements'),
+            editMeasurements: document.getElementById('editMeasurements'),
+            publishData: document.getElementById('publishData'),
+            publishedData: document.getElementById('publishedData'),
+            dataTableBody: document.getElementById('dataTableBody'),
+            measureAnother: document.getElementById('measureAnother'),
+            notification: document.getElementById('notification')
+        };
+
+        // Helper Functions
+        function showNotification(message) {
+            elements.notification.textContent = message;
+            elements.notification.classList.add('show');
+            setTimeout(() => {
+                elements.notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function hideAllSteps() {
+            elements.step1.classList.add('hidden');
+            elements.step2.classList.add('hidden');
+            elements.step3.classList.add('hidden');
+            elements.step4.classList.add('hidden');
+        }
+
+        function checkAllMeasurementsComplete() {
+            const allFilled = state.measurements.every(m => m.value !== null && m.value !== '');
+            elements.continueToReview.disabled = !allFilled;
+            
+            if (allFilled) {
+                elements.continueToReview.classList.add('btn-primary');
+            } else {
+                elements.continueToReview.classList.remove('btn-primary');
+            }
+        }
+
+        function renderMeasurementsList() {
+            elements.measurementsList.innerHTML = state.measurements.map((m, index) => {
+                const isFilled = m.value !== null && m.value !== '';
+                const itemClass = `measurement-item ${isFilled ? 'completed' : ''}`;
+                
+                return `
+                    <div class="${itemClass}">
+                        <span class="measurement-label">${m.name} (${m.unit})</span>
+                        <div class="measurement-input-container">
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                class="measurement-input ${isFilled ? 'filled' : ''}" 
+                                data-index="${index}"
+                                value="${m.value || ''}"
+                                placeholder="0.00"
+                                inputmode="decimal"
+                            />
+                            <button class="btn-small" data-index="${index}" data-action="laser">
+                                📏 Laser
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add event listeners to all inputs
+            document.querySelectorAll('.measurement-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const value = e.target.value;
+                    
+                    if (value && !isNaN(value)) {
+                        state.measurements[index].value = parseFloat(value).toFixed(2);
+                        e.target.classList.add('filled');
+                        e.target.closest('.measurement-item').classList.add('completed');
+                    } else {
+                        state.measurements[index].value = null;
+                        e.target.classList.remove('filled');
+                        e.target.closest('.measurement-item').classList.remove('completed');
+                    }
+                    
+                    checkAllMeasurementsComplete();
+                });
+
+                // Format on blur
+                input.addEventListener('blur', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    if (state.measurements[index].value) {
+                        e.target.value = state.measurements[index].value;
+                    }
+                });
+            });
+
+            // Add event listeners to laser buttons
+            document.querySelectorAll('[data-action="laser"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    simulateLaserMeasurement(index);
+                });
+            });
+
+            checkAllMeasurementsComplete();
+        }
+
+        function simulateLaserMeasurement(index) {
+            // Simulate laser measurement with realistic values
+            const ranges = {
+                'Width': [7.5, 8.75],
+                'Length': [30.0, 33.0],
+                'Wheelbase': [13.5, 15.5],
+                'Tail Length': [6.25, 7.0],
+                'Nose Length': [6.75, 7.5],
+                'Front Axle Width': [2.5, 3.0],
+                'Back Axle Width': [2.5, 3.0]
+            };
+
+            const measurementName = state.measurements[index].name;
+            const [min, max] = ranges[measurementName];
+            const value = (Math.random() * (max - min) + min).toFixed(2);
+
+            state.measurements[index].value = value;
+            
+            // Update the input field
+            const input = document.querySelector(`[data-index="${index}"].measurement-input`);
+            if (input) {
+                input.value = value;
+                input.classList.add('filled');
+                input.closest('.measurement-item').classList.add('completed');
+            }
+
+            showNotification(`✓ Measured ${measurementName}: ${value}"`);
+            checkAllMeasurementsComplete();
+        }
+
+        function renderReview() {
+            elements.reviewSku.textContent = state.currentSku;
+            elements.reviewMeasurements.innerHTML = state.measurements.map(m => `
+                <div class="measurement-item completed">
+                    <span class="measurement-label">${m.name}</span>
+                    <span class="measurement-value">
+                        ${m.value} <span class="measurement-unit">${m.unit}</span>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateDataTable() {
+            elements.dataTableBody.innerHTML = state.publishedRecords.map(record => `
+                <tr>
+                    <td>${record.sku}</td>
+                    <td>${record.measurements[0].value}</td>
+                    <td>${record.measurements[1].value}</td>
+                    <td>${record.measurements[2].value}</td>
+                    <td>${record.measurements[3].value}</td>
+                    <td>${record.measurements[4].value}</td>
+                    <td>${record.measurements[5].value}</td>
+                    <td>${record.measurements[6].value}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetMeasurements() {
+            state.currentSku = '';
+            state.measurements.forEach(m => m.value = null);
+            state.currentMeasurementIndex = 0;
+        }
+
+        // Google Apps Script Function
+        async function appendToGoogleSheet(rowData) {
+            const body = {
+                values: [rowData]
+            };
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script requires no-cors mode
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                // Note: no-cors mode doesn't allow reading the response,
+                // but if we get here without an error, it likely succeeded
+                return { success: true };
+            } catch (error) {
+                console.error('Google Sheets Error:', error);
+                throw error;
+            }
+        }
+
+        // Step 1: Connect Bluetooth
+        elements.connectBluetooth.addEventListener('click', () => {
+            elements.connectBluetooth.disabled = true;
+            elements.connectBluetooth.textContent = 'Connecting...';
+            
+            setTimeout(() => {
+                state.bluetoothConnected = true;
+                elements.bluetoothStatus.classList.add('connected');
+                elements.bluetoothText.textContent = 'Bosch GLM Connected';
+                showNotification('✓ Bluetooth Connected (Simulated)');
+                
+                hideAllSteps();
+                elements.step2.classList.remove('hidden');
+            }, 1500);
+        });
+
+        // Step 2: Camera Scan
+        elements.startCamera.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                elements.video.srcObject = stream;
+                elements.video.classList.remove('hidden');
+                elements.video.parentElement.querySelector('.camera-placeholder').style.display = 'none';
+                
+                // Initialize QR code scanner
+                html5QrCode = new Html5Qrcode("cameraContainer");
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        state.currentSku = decodedText;
+                        elements.currentSku.textContent = decodedText;
+                        html5QrCode.stop();
+                        stream.getTracks().forEach(track => track.stop());
+                        showNotification(`✓ Scanned SKU: ${decodedText}`);
+                        
+                        hideAllSteps();
+                        elements.step3.classList.remove('hidden');
+                        renderMeasurementsList();
+                    }
+                );
+            } catch (err) {
+                showNotification('Camera access denied. Use manual entry.');
+                console.error(err);
+            }
+        });
+
+        // Step 2: Manual SKU Entry
+        elements.submitSku.addEventListener('click', () => {
+            const sku = elements.skuInput.value.trim();
+            if (sku) {
+                state.currentSku = sku;
+                elements.currentSku.textContent = sku;
+                showNotification(`✓ SKU Entered: ${sku}`);
+                
+                hideAllSteps();
+                elements.step3.classList.remove('hidden');
+                renderMeasurementsList();
+            } else {
+                showNotification('Please enter a valid SKU');
+            }
+        });
+
+        // Step 3: Continue to Review
+        elements.continueToReview.addEventListener('click', () => {
+            hideAllSteps();
+            elements.step4.classList.remove('hidden');
+            renderReview();
+        });
+
+        // Step 4: Edit Measurements
+        elements.editMeasurements.addEventListener('click', () => {
+            hideAllSteps();
+            elements.step3.classList.remove('hidden');
+            renderMeasurementsList();
+        });
+
+        // Step 4: Publish Data
+        elements.publishData.addEventListener('click', async () => {
+            // Disable button to prevent double-clicks
+            elements.publishData.disabled = true;
+            elements.publishData.textContent = 'Publishing...';
+
+            try {
+                // Prepare row data for Google Sheets
+                const rowData = [
+                    state.currentSku,
+                    state.measurements[0].value, // Width
+                    state.measurements[1].value, // Length
+                    state.measurements[2].value, // Wheelbase
+                    state.measurements[3].value, // Tail Length
+                    state.measurements[4].value, // Nose Length
+                    state.measurements[5].value, // Front Axle Width
+                    state.measurements[6].value  // Back Axle Width
+                ];
+
+                // Write to Google Sheets
+                await appendToGoogleSheet(rowData);
+
+                // Save to local "database" for display
+                state.publishedRecords.push({
+                    sku: state.currentSku,
+                    measurements: JSON.parse(JSON.stringify(state.measurements)),
+                    timestamp: new Date().toISOString()
+                });
+
+                showNotification('✓ Published to Google Sheet!');
+                
+                hideAllSteps();
+                elements.publishedData.classList.remove('hidden');
+                updateDataTable();
+                
+                resetMeasurements();
+            } catch (error) {
+                showNotification('❌ Error publishing to Google Sheets: ' + error.message);
+                console.error('Publish error:', error);
+            } finally {
+                // Re-enable button
+                elements.publishData.disabled = false;
+                elements.publishData.textContent = '✓ Publish to Sheet';
+            }
+        });
+
+        // Measure Another
+        elements.measureAnother.addEventListener('click', () => {
+            hideAllSteps();
+            elements.step2.classList.remove('hidden');
+            elements.skuInput.value = '';
+        });
+    </script>
+</body>
+</html>
