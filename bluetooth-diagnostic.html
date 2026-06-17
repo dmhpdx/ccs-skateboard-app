@@ -350,34 +350,46 @@
             connectBtn.disabled = true;
             connectStatus.style.display = 'block';
             connectStatus.className = 'status info';
-            connectStatus.textContent = 'Attempting to connect...';
+            connectStatus.textContent = 'Attempting to connect to GATT...';
 
-            log(`Connecting to ${selectedDevice.name}...`, 'info');
+            log(`Connecting to GATT on ${selectedDevice.name}...`, 'info');
 
             try {
+                // Check if device is already connected
+                if (selectedDevice.gatt.connected) {
+                    log('Device already connected, disconnecting first', 'info');
+                    await selectedDevice.gatt.disconnect();
+                }
+
+                // Connect to GATT server
                 bluetoothDevice = await selectedDevice.gatt.connect();
                 log('GATT connection established', 'success');
+                connectStatus.textContent = 'GATT connected. Searching for services...';
 
-                const service = await bluetoothDevice.gatt.getPrimaryService('00001016-0000-1000-8000-00805f9b34fb');
-                log('Service found: 00001016-0000-1000-8000-00805f9b34fb', 'success');
+                // Get all services
+                const services = await bluetoothDevice.gatt.getPrimaryServices();
+                log(`Found ${services.length} services`, 'success');
 
-                const characteristics = await service.getCharacteristics();
-                log(`Found ${characteristics.length} characteristics`, 'success');
+                if (services.length === 0) {
+                    throw new Error('No services found on device');
+                }
 
-                if (characteristics.length > 0) {
-                    characteristic = characteristics[0];
-                    log(`Using characteristic: ${characteristic.uuid}`, 'success');
+                // List all services found
+                let servicesList = '';
+                for (const service of services) {
+                    servicesList += `<br>• ${service.uuid}`;
+                    log(`Service found: ${service.uuid}`, 'info');
                 }
 
                 connectStatus.className = 'status success';
-                connectStatus.innerHTML = '✅ <strong>Connected Successfully!</strong><br>GATT connection established and service found.';
+                connectStatus.innerHTML = `✅ <strong>Connected Successfully!</strong><br>GATT connection established.<br><strong>Services found:</strong>${servicesList}`;
                 
                 document.getElementById('measureButton').disabled = false;
 
             } catch (error) {
                 log(`Connection error: ${error.message}`, 'error');
                 connectStatus.className = 'status error';
-                connectStatus.innerHTML = `❌ <strong>Connection Failed</strong><br>${error.message}`;
+                connectStatus.innerHTML = `❌ <strong>Connection Failed</strong><br>${error.message}<br><br>Try disconnecting and reconnecting the device, or restart your Leica DISTO D2.`;
             }
 
             connectBtn.disabled = false;
